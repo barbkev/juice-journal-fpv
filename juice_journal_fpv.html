@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Juice Journal FPV – Battery Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <h1>Juice Journal</h1>
+  <p>Minimal MVP – FPV battery tracker.</p>
+
+  <form>
+    <div>
+      <label>Battery ID:
+        <input type="text" name="batteryId" placeholder="BAT_001">
+      </label>
+    </div>
+    <div>
+      <label>Quad:
+        <input type="text" name="quad" placeholder="Air 65">
+      </label>
+    </div>
+    <div>
+      <label>Flight time (minutes):
+        <input type="number" name="flightTime" step="0.1" min="0">
+      </label>
+    </div>
+    <button type="submit">Log flight</button>
+  </form>
+</body>
+</html>
