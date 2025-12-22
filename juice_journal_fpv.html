@@ -4,28 +4,267 @@
   <meta charset="UTF-8">
   <title>Juice Journal FPV – Battery Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --primary: #2180A1;
+      --primary-dark: #1A6B85;
+      --bg: #FCFCF9;
+      --surface: #FFFFFF;
+      --border: #E4E4DF;
+      --text: #134252;
+      --text-muted: #62707F;
+      --radius: 10px;
+      --space: 14px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .container {
+      max-width: 520px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+    h1 {
+      margin: 6px 0 2px;
+      font-size: 26px;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 18px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+    .form-group { margin-bottom: 12px; }
+    label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      font-size: 15px;
+      font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(33,128,161,0.15);
+    }
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.08s;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      width: 100%;
+    }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-primary:active { transform: scale(0.98); }
+    .nfc-btn {
+      width: 100%;
+      margin-bottom: 10px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 14px;
+      border: 2px dashed rgba(255,255,255,0.4);
+      font-size: 16px;
+    }
+    .battery-pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(33,128,161,0.08);
+      color: var(--primary-dark);
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    .status {
+      margin-top: 10px;
+      font-size: 14px;
+      padding: 10px;
+      border-radius: 8px;
+    }
+    .status-ok {
+      background: rgba(32,129,65,0.08);
+      color: #207344;
+      border: 1px solid rgba(32,129,65,0.3);
+    }
+    .status-err {
+      background: rgba(176,32,58,0.1);
+      color: #a02033;
+      border: 1px solid rgba(176,32,58,0.3);
+    }
+    @media (max-width: 480px) {
+      body { padding: 12px; }
+      h1 { font-size: 22px; }
+    }
+  </style>
 </head>
 <body>
-  <h1>Juice Journal</h1>
-  <p>Minimal MVP – FPV battery tracker.</p>
+  <div class="container">
+    <header>
+      <div>🔋</div>
+      <h1>Juice Journal</h1>
+      <div class="subtitle">FPV battery flight logger (MVP)</div>
+    </header>
 
-  <form>
-    <div>
-      <label>Battery ID:
-        <input type="text" name="batteryId" placeholder="BAT_001">
-      </label>
+    <div class="card">
+      <button id="scanNfcBtn" class="nfc-btn" type="button">
+        📲 Tap to scan battery (NFC)
+      </button>
+
+      <div id="batteryTag" class="battery-pill" style="display:none;">
+        Battery: <span id="batteryIdLabel"></span>
+      </div>
+
+      <form id="flightForm">
+        <div class="form-group">
+          <label for="batteryId">Battery ID</label>
+          <input id="batteryId" name="batteryId" placeholder="BAT_001" required>
+        </div>
+
+        <div class="form-group">
+          <label for="quad">Quad</label>
+          <select id="quad" name="quad" required>
+            <option value="">Select quad…</option>
+            <option>Air 65</option>
+            <option>Bubbito 1</option>
+            <option>Bubbito 2</option>
+            <option>Meteor 75</option>
+            <option>Meteor 75 Pro 1</option>
+            <option>Meteor 75 Pro 2</option>
+            <option>Pavo Femto</option>
+            <option>Pavo 20</option>
+            <option>Skyliner 1</option>
+            <option>Skyliner 2</option>
+            <option>Skylite</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="flightTime">Flight time (minutes)</label>
+          <input id="flightTime" name="flightTime" type="number" step="0.1" min="0" required>
+        </div>
+
+        <div class="form-group">
+          <label for="notes">Notes (optional)</label>
+          <textarea id="notes" name="notes" rows="2"
+            placeholder="e.g. windy, slight sag, indoors"></textarea>
+        </div>
+
+        <button class="btn-primary" type="submit">
+          Log flight
+        </button>
+      </form>
+
+      <div id="statusBox" class="status" style="display:none;"></div>
     </div>
-    <div>
-      <label>Quad:
-        <input type="text" name="quad" placeholder="Air 65">
-      </label>
-    </div>
-    <div>
-      <label>Flight time (minutes):
-        <input type="number" name="flightTime" step="0.1" min="0">
-      </label>
-    </div>
-    <button type="submit">Log flight</button>
-  </form>
+  </div>
+
+  <script>
+    const scanBtn = document.getElementById('scanNfcBtn');
+    const batteryInput = document.getElementById('batteryId');
+    const batteryTag = document.getElementById('batteryTag');
+    const batteryIdLabel = document.getElementById('batteryIdLabel');
+    const form = document.getElementById('flightForm');
+    const statusBox = document.getElementById('statusBox');
+
+    // NFC scan (simple, text record only)
+    async function scanNfc() {
+      if (!('NDEFReader' in window)) {
+        showStatus('NFC not supported on this device. Enter Battery ID manually.', false);
+        return;
+      }
+      try {
+        const ndef = new NDEFReader();
+        await ndef.scan();
+        showStatus('Hold phone near battery tag…', true);
+
+        return new Promise(resolve => {
+          ndef.onreading = event => {
+            const dec = new TextDecoder();
+            for (const record of event.message.records) {
+              if (record.recordType === 'text') {
+                const id = dec.decode(record.data).trim();
+                resolve(id);
+                return;
+              }
+            }
+            resolve(null);
+          };
+          setTimeout(() => resolve(null), 8000);
+        });
+      } catch (err) {
+        showStatus('NFC error: ' + err.message, false);
+        return null;
+      }
+    }
+
+    scanBtn.addEventListener('click', async () => {
+      scanBtn.disabled = true;
+      scanBtn.textContent = 'Scanning… hold near tag';
+      const id = await scanNfc();
+      scanBtn.disabled = false;
+      scanBtn.textContent = '📲 Tap to scan battery (NFC)';
+
+      if (id) {
+        batteryInput.value = id;
+        batteryIdLabel.textContent = id;
+        batteryTag.style.display = 'inline-block';
+        showStatus('Scanned battery ' + id, true);
+      } else {
+        showStatus('Could not read NFC tag. Try again or type ID.', false);
+      }
+    });
+
+    function showStatus(msg, ok) {
+      statusBox.style.display = 'block';
+      statusBox.textContent = msg;
+      statusBox.className = 'status ' + (ok ? 'status-ok' : 'status-err');
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const payload = {
+        date: new Date().toISOString(),
+        batteryId: batteryInput.value.trim(),
+        quad: document.getElementById('quad').value,
+        flightTime: parseFloat(document.getElementById('flightTime').value),
+        notes: document.getElementById('notes').value.trim()
+      };
+      // For now, just save to localStorage as proof-of-concept.
+      const key = 'jj_flight_' + Date.now();
+      localStorage.setItem(key, JSON.stringify(payload));
+      showStatus(
+        `Logged ${payload.flightTime} min on ${payload.batteryId} (${payload.quad})`,
+        true
+      );
+      form.reset();
+      batteryTag.style.display = 'none';
+    });
+  </script>
 </body>
 </html>
