@@ -246,25 +246,51 @@
       statusBox.className = 'status ' + (ok ? 'status-ok' : 'status-err');
     }
 
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      const payload = {
-        date: new Date().toISOString(),
-        batteryId: batteryInput.value.trim(),
-        quad: document.getElementById('quad').value,
-        flightTime: parseFloat(document.getElementById('flightTime').value),
-        notes: document.getElementById('notes').value.trim()
-      };
-      // For now, just save to localStorage as proof-of-concept.
-      const key = 'jj_flight_' + Date.now();
-      localStorage.setItem(key, JSON.stringify(payload));
-      showStatus(
-        `Logged ${payload.flightTime} min on ${payload.batteryId} (${payload.quad})`,
-        true
-      );
-      form.reset();
-      batteryTag.style.display = 'none';
-    });
+form.addEventListener('submit', e => {
+  e.preventDefault();
+
+  const batteryId = batteryInput.value.trim();
+  const quad = document.getElementById('quad').value;
+  const flightTime = document.getElementById('flightTime').value;
+  const notes = document.getElementById('notes').value.trim();
+
+  if (!batteryId || !quad || !flightTime) {
+    showStatus('Battery ID, quad, and flight time are required.', false);
+    return;
+  }
+
+  // Save locally as backup
+  const payload = {
+    date: new Date().toISOString(),
+    batteryId,
+    quad,
+    flightTime: parseFloat(flightTime),
+    notes
+  };
+  const key = 'jj_flight_' + Date.now();
+  localStorage.setItem(key, JSON.stringify(payload));
+
+  // === Google Form integration ===
+  // Replace these with your real values:
+  const baseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfrpaa2GiWf37msn8wh9WZX04tcEug_fMFZp_gaYZq__BiRYA/viewform';
+  const batteryField = 'entry.686789701';
+  // Optional: you can add more fields later (quad, flight time) once you know their entry IDs.
+
+  // Build prefilled URL with Battery ID
+  const url =
+    baseUrl + '?' + batteryField + '=' + encodeURIComponent(batteryId);
+
+  // Open the Google Form in a new tab so you can submit it
+  window.open(url, '_blank');
+
+  showStatus(
+    `Saved locally and opened form for ${batteryId}. Complete and submit the form to log in Sheets.`,
+    true
+  );
+
+  form.reset();
+  batteryTag.style.display = 'none';
+});
   </script>
 </body>
 </html>
