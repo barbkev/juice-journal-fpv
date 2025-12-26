@@ -5,6 +5,26 @@ const batteryIdLabel = document.getElementById('batteryIdLabel');
 const form = document.getElementById('flightForm');
 const statusBox = document.getElementById('statusBox');
 
+const STATS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwTFmBbJcPu71hAN0Yecb_D4EYBabjWgfYF1iJAsiImCd8CEXkDqlWAaY7U4ZnTW-25IA/exec'; // same script, for doGet
+
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search); // [web:143][web:144]
+  const batteryId = params.get('bid');
+
+  if (batteryId) {
+    batteryInput.value = batteryId;
+    batteryIdLabel.textContent = batteryId;
+    batteryTag.style.display = 'inline-block';
+    showStatus(`Scanned battery ${batteryId}`, true);
+
+    // Load stats for this battery
+    loadBatteryStats(batteryId);
+  } else {
+    // No bid in URL – still load generic stats if you want, or skip
+    loadBatteryStats('');
+  }
+});
+
 // NFC scan (simple, text record only)
 async function scanNfc() {
   if (!('NDEFReader' in window)) {
@@ -57,6 +77,59 @@ function showStatus(msg, ok) {
   statusBox.style.display = 'block';
   statusBox.textContent = msg;
   statusBox.className = 'status ' + (ok ? 'status-ok' : 'status-err');
+}
+
+async function loadBatteryStats(batteryId) {
+  const statsLoading = document.getElementById('statsLoading');
+  const statsContent = document.getElementById('statsContent');
+  const totalEl = document.getElementById('statTotalFlights');
+  const avgEl = document.getElementById('statAvgFlight');
+  const lastEl = document.getElementById('statLastFlight');
+  const recentList = document.getElementById('recentFlights');
+
+  statsLoading.textContent = 'Loading stats…';
+  statsContent.style.display = 'none';
+  recentList.innerHTML = '';
+
+  if (!batteryId) {
+    statsLoading.textContent = 'No battery selected yet.';
+    return;
+  }
+
+  try {
+    const url = `${STATS_ENDPOINT}?batteryId=${encodeURIComponent(batteryId)}`;
+    const res = await fetch(url); // GET JSON [web:155][web:161]
+    const data = await res.json();
+
+    if (!data.ok) {
+      statsLoading.textContent = data.error || 'Failed to load stats.';
+      return;
+    }
+
+    statsLoading.style.display = 'none';
+    statsContent.style.display = 'block';
+
+    totalEl.textContent = data.totalFlights;
+    avgEl.textContent = data.avgFlightTime;
+    lastEl.textContent = data.lastFlightTime
+      ? `${data.lastFlightTime} (${new Date(data.lastFlightDate).toLocaleDateString()})`
+      : '—';
+
+    if (data.recent && data.recent.length) {
+      data.recent.forEach(f => {
+        const li = document.createElement('li');
+        const dateStr = new Date(f.timestamp).toLocaleDateString();
+        li.textContent = `${dateStr} – ${f.quad} – ${f.flightTime}`;
+        recentList.appendChild(li);
+      });
+    } else {
+      const li = document.createElement('li');
+      li.textContent = 'No flights logged yet.';
+      recentList.appendChild(li);
+    }
+  } catch (err) {
+    statsLoading.textContent = 'Error loading stats: ' + err.message;
+  }
 }
 
 const FLIGHT_LOG_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwTFmBbJcPu71hAN0Yecb_D4EYBabjWgfYF1iJAsiImCd8CEXkDqlWAaY7U4ZnTW-25IA/exec';
