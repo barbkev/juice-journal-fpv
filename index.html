@@ -166,7 +166,8 @@
 
         <div class="form-group">
           <label for="flightTime">Flight time (minutes)</label>
-          <input id="flightTime" name="flightTime" type="time" step="1" required>
+          <input id="minutes" type="number" min="0" inputmode="numeric">
+          <input id="seconds" type="number" min="0" max="59" inputmode="numeric">
         </div>
 
         <div class="form-group">
@@ -251,7 +252,9 @@ form.addEventListener('submit', e => {
 
   const batteryId = batteryInput.value.trim();
   const quad = document.getElementById('quad').value;
-  const flightTime = document.getElementById('flightTime').value.trim();
+  const mm = minutes.padStart(1, '0');
+  const ss = seconds.padStart(2, '0');
+  const flightTime = `${mm}:${ss}`;
   const notes = document.getElementById('notes').value.trim();
 
   if (!batteryId || !quad || !flightTime) {
