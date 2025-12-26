@@ -251,7 +251,7 @@ form.addEventListener('submit', e => {
 
   const batteryId = batteryInput.value.trim();
   const quad = document.getElementById('quad').value;
-  const flightTime = document.getElementById('flightTime').value;
+  const flightTime = document.getElementById('flightTime').value.trim();
   const notes = document.getElementById('notes').value.trim();
 
   if (!batteryId || !quad || !flightTime) {
@@ -259,37 +259,39 @@ form.addEventListener('submit', e => {
     return;
   }
 
-  // Save locally as backup
+  // optional local backup
   const payload = {
     date: new Date().toISOString(),
     batteryId,
     quad,
-    flightTime: parseFloat(flightTime),
+    flightTime,
     notes
   };
   const key = 'jj_flight_' + Date.now();
   localStorage.setItem(key, JSON.stringify(payload));
 
-  // === Google Form integration ===
-  // Replace these with your real values:
-  const baseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfrpaa2GiWf37msn8wh9WZX04tcEug_fMFZp_gaYZq__BiRYA/viewform?usp=pp_url';
-  const batteryField = 'entry.686789701';
-  // Optional: you can add more fields later (quad, flight time) once you know their entry IDs.
+  const baseUrl =
+    'https://docs.google.com/forms/d/e/1FAIpQLSfrpaa2GiWf37msn8wh9WZX04tcEug_fMFZp_gaYZq__BiRYA/viewform?usp=pp_url';
 
-  // Build prefilled URL with Battery ID
-  const url =
-    baseUrl + '?' + batteryField + '=' + encodeURIComponent(batteryId);
+  const params = new URLSearchParams({
+    'entry.686789701': batteryId,   // Battery ID
+    'entry.1572997075': quad,       // Quad
+    'entry.1887045800': flightTime, // Flight Time
+    'entry.454903179': notes        // Notes
+  });
 
-  // Open the Google Form in a new tab so you can submit it
+  const url = baseUrl + '&' + params.toString();
+
   window.open(url, '_blank');
 
   showStatus(
-    `Saved locally and opened form for ${batteryId}. Complete and submit the form to log in Sheets.`,
+    `Opened Google Form for ${batteryId}. Submit to record in Sheets.`,
     true
   );
 
-  form.reset();
-  batteryTag.style.display = 'none';
+  // keep values or reset, your choice:
+  // form.reset();
+  // batteryTag.style.display = 'none';
 });
   </script>
 </body>
