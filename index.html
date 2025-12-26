@@ -304,23 +304,20 @@ form.addEventListener('submit', async e => {
   localStorage.setItem(key, JSON.stringify(payload));
 
   try {
-    const res = await fetch(FLIGHT_LOG_ENDPOINT, {
+    await fetch(FLIGHT_LOG_ENDPOINT, {
       method: 'POST',
+      mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
 
-    const data = await res.json();
-    if (data.ok) {
-      showStatus(
-        `Logged ${flightTime} on ${batteryId} (${quad}) to Flight Log sheet.`,
-        true
-      );
-      form.reset();
-      batteryTag.style.display = 'none';
-    } else {
-      showStatus('Server error: ' + (data.error || 'Unknown'), false);
-    }
+    showStatus(
+      `Sent ${flightTime} on ${batteryId} (${quad}) to Flight Log endpoint.`,
+      true
+    );
+
+    form.reset();
+    batteryTag.style.display = 'none';
   } catch (err) {
     showStatus('Network error: ' + err.message, false);
   }
