@@ -14,6 +14,7 @@
       <div class="subtitle">FPV battery flight logger (MVP)</div>
     </header>
 
+    <!-- Flight Log Form -->
     <div class="card">
       <button id="scanNfcBtn" class="nfc-btn" type="button">
         📲 Tap to scan battery (NFC)
@@ -71,6 +72,30 @@
 
       <div id="statusBox" class="status" style="display:none;"></div>
     </div>
+
+    <!-- Battery Stats -->
+    <div class="card" id="statsCard">
+      <h2 style="margin-top:0;font-size:18px;">Battery stats</h2>
+      <div id="statsLoading">Loading stats…</div>
+      <div id="statsContent" style="display:none;">
+        <div class="stat-row">
+          <span>Total flights</span>
+          <strong id="statTotalFlights">–</strong>
+        </div>
+        <div class="stat-row">
+          <span>Average flight</span>
+          <strong id="statAvgFlight">–</strong>
+        </div>
+        <div class="stat-row">
+          <span>Last flight</span>
+          <strong id="statLastFlight">–</strong>
+        </div>
+
+        <h3 style="font-size:15px;margin-top:14px;">Recent flights</h3>
+        <ul id="recentFlights" class="recent-list"></ul>
+      </div>
+    </div>
+
   </div>
 
   <script defer src="js/flight-log.js"></script>
