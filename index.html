@@ -121,6 +121,22 @@
       body { padding: 12px; }
       h1 { font-size: 22px; }
     }
+    .time-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .time-row input {
+      width: 70px;
+      text-align: center;
+    }
+
+    .time-sep {
+      font-size: 16px;
+      color: var(--text-muted);
+    }
+
   </style>
 </head>
 <body>
@@ -165,9 +181,14 @@
         </div>
 
         <div class="form-group">
-          <label for="flightTime">Flight time (minutes)</label>
-          <input id="minutes" type="number" min="0" inputmode="numeric">
-          <input id="seconds" type="number" min="0" max="59" inputmode="numeric">
+          <label for="minutes">Flight time</label>
+          <div class="time-row">
+            <input id="minutes" name="minutes" type="number" inputmode="numeric"
+                  min="0" max="59" placeholder="1">
+            <span class="time-sep">:</span>
+            <input id="seconds" name="seconds" type="number" inputmode="numeric"
+                  min="0" max="59" placeholder="23">
+          </div>
         </div>
 
         <div class="form-group">
@@ -247,54 +268,62 @@
       statusBox.className = 'status ' + (ok ? 'status-ok' : 'status-err');
     }
 
-form.addEventListener('submit', e => {
+const FLIGHT_LOG_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwTFmBbJcPu71hAN0Yecb_D4EYBabjWgfYF1iJAsiImCd8CEXkDqlWAaY7U4ZnTW-25IA/exec';
+
+form.addEventListener('submit', async e => {
   e.preventDefault();
 
   const batteryId = batteryInput.value.trim();
   const quad = document.getElementById('quad').value;
-  const mm = minutes.padStart(1, '0');
-  const ss = seconds.padStart(2, '0');
-  const flightTime = `${mm}:${ss}`;
+  const minutesEl = document.getElementById('minutes');
+  const secondsEl = document.getElementById('seconds');
   const notes = document.getElementById('notes').value.trim();
 
-  if (!batteryId || !quad || !flightTime) {
-    showStatus('Battery ID, quad, and flight time are required.', false);
+  const minutesValue = minutesEl.value.trim();
+  const secondsValue = secondsEl.value.trim();
+
+  if (!batteryId || !quad || minutesValue === '' || secondsValue === '') {
+    showStatus('Battery ID, quad, minutes, and seconds are required.', false);
     return;
   }
 
-  // optional local backup
+  const mm = String(parseInt(minutesValue, 10) || 0);
+  const ss = String(parseInt(secondsValue, 10) || 0).padStart(2, '0');
+  const flightTime = `${mm}:${ss}`; // "1:23"
+
   const payload = {
-    date: new Date().toISOString(),
+    timestamp: new Date().toISOString(),
     batteryId,
     quad,
     flightTime,
     notes
   };
+
+  // local backup
   const key = 'jj_flight_' + Date.now();
   localStorage.setItem(key, JSON.stringify(payload));
 
-  const baseUrl =
-    'https://docs.google.com/forms/d/e/1FAIpQLSfrpaa2GiWf37msn8wh9WZX04tcEug_fMFZp_gaYZq__BiRYA/viewform?usp=pp_url';
+  try {
+    const res = await fetch(FLIGHT_LOG_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
-  const params = new URLSearchParams({
-    'entry.686789701': batteryId,   // Battery ID
-    'entry.1572997075': quad,       // Quad
-    'entry.1887045800': flightTime, // Flight Time
-    'entry.454903179': notes        // Notes
-  });
-
-  const url = baseUrl + '&' + params.toString();
-
-  window.open(url, '_blank');
-
-  showStatus(
-    `Opened Google Form for ${batteryId}. Submit to record in Sheets.`,
-    true
-  );
-
-  // keep values or reset, your choice:
-  // form.reset();
-  // batteryTag.style.display = 'none';
+    const data = await res.json();
+    if (data.ok) {
+      showStatus(
+        `Logged ${flightTime} on ${batteryId} (${quad}) to Flight Log sheet.`,
+        true
+      );
+      form.reset();
+      batteryTag.style.display = 'none';
+    } else {
+      showStatus('Server error: ' + (data.error || 'Unknown'), false);
+    }
+  } catch (err) {
+    showStatus('Network error: ' + err.message, false);
+  }
 });
   </script>
 </body>
