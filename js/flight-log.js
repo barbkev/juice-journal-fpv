@@ -5,7 +5,8 @@ const batteryIdLabel = document.getElementById('batteryIdLabel');
 const form = document.getElementById('flightForm');
 const statusBox = document.getElementById('statusBox');
 
-const STATS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwTFmBbJcPu71hAN0Yecb_D4EYBabjWgfYF1iJAsiImCd8CEXkDqlWAaY7U4ZnTW-25IA/exec'; // same script, for doGet
+const STATS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbylYx1LeLqgPSVEIixFJDlBlKN8_hyIdTgMVM9ueKsftXOLWG45OrW1NjuvHVoyzFqm8g/exec'; // same script, for doGet
+const FLIGHT_LOG_ENDPOINT = 'https://script.google.com/macros/s/AKfycbylYx1LeLqgPSVEIixFJDlBlKN8_hyIdTgMVM9ueKsftXOLWG45OrW1NjuvHVoyzFqm8g/exec';
 
 window.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(window.location.search); // [web:143][web:144]
@@ -132,7 +133,6 @@ async function loadBatteryStats(batteryId) {
   }
 }
 
-const FLIGHT_LOG_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwTFmBbJcPu71hAN0Yecb_D4EYBabjWgfYF1iJAsiImCd8CEXkDqlWAaY7U4ZnTW-25IA/exec';
 
 form.addEventListener('submit', async e => {
   e.preventDefault();
